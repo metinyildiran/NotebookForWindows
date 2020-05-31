@@ -19,6 +19,7 @@ public class SignUpClass extends JFrame {
 
     Color primaryColor = new Color(49, 67, 91);
     Color secondaryColor = new Color(174, 190, 206);
+    Color buttonColor = new Color(3, 163, 164);
 
     JPanel mainPanel;
     JLabel emailLabel, passwordLabel;
@@ -27,29 +28,31 @@ public class SignUpClass extends JFrame {
 
     public SignUpClass() {
 
-        setLayout(null);
         setPreferredSize(new Dimension(500, 500));
         setTitle("Notebook");
-        setSize(500, 500);
         setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setAlwaysOnTop(true);
         setVisible(true);
 
         emailLabel = new JLabel("Email: ");
+        emailLabel.setForeground(Color.WHITE);
         passwordLabel = new JLabel("Password: ");
+        passwordLabel.setForeground(Color.WHITE);
         emailTextField = new JTextField("efsaneemail@gmail.com");
         emailTextField.setMaximumSize(new Dimension(1000, 20));
         passwordTextField = new JTextField("123456");
         passwordTextField.setMaximumSize(new Dimension(1000, 20));
         signInButton = new JButton("Sign In");
+        signInButton.setBackground(buttonColor);
         signUpButton = new JButton("Sign Up");
+        signUpButton.setBackground(buttonColor);
 
         mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.setPreferredSize(new Dimension(500, 500));
         mainPanel.setVisible(true);
-        mainPanel.setBackground(secondaryColor);
+        mainPanel.setBackground(primaryColor);
 
         mainPanel.add(emailLabel);
         mainPanel.add(emailTextField);
