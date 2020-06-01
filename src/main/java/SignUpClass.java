@@ -2,6 +2,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import retrofit.JsonPlaceholderApi;
+import retrofit.User;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -12,21 +13,21 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.IOException;
 
 public class SignUpClass extends JFrame {
 
-    JsonPlaceholderApi jsonPlaceholderApi;
+    private JsonPlaceholderApi jsonPlaceholderApi;
 
-    Color primaryColor = new Color(49, 67, 91);
-    Color secondaryColor = new Color(174, 190, 206);
-    Color buttonColor = new Color(3, 163, 164);
-
-    JPanel mainPanel;
+    static JPanel mainPanel;
     JLabel emailLabel, passwordLabel;
     JTextField emailTextField, passwordTextField;
     JButton signInButton, signUpButton;
 
+    public static Model model;
+
     public SignUpClass() {
+        model = new Model();
 
         setPreferredSize(new Dimension(500, 500));
         setTitle("Notebook");
@@ -36,23 +37,23 @@ public class SignUpClass extends JFrame {
         setVisible(true);
 
         emailLabel = new JLabel("Email: ");
-        emailLabel.setForeground(Color.WHITE);
+        emailLabel.setForeground(MyColor.WHITE);
         passwordLabel = new JLabel("Password: ");
-        passwordLabel.setForeground(Color.WHITE);
+        passwordLabel.setForeground(MyColor.WHITE);
         emailTextField = new JTextField("efsaneemail@gmail.com");
         emailTextField.setMaximumSize(new Dimension(1000, 20));
         passwordTextField = new JTextField("123456");
         passwordTextField.setMaximumSize(new Dimension(1000, 20));
         signInButton = new JButton("Sign In");
-        signInButton.setBackground(buttonColor);
+        signInButton.setBackground(MyColor.BUTTON_COLOR);
         signUpButton = new JButton("Sign Up");
-        signUpButton.setBackground(buttonColor);
+        signUpButton.setBackground(MyColor.BUTTON_COLOR);
 
         mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.setPreferredSize(new Dimension(500, 500));
         mainPanel.setVisible(true);
-        mainPanel.setBackground(primaryColor);
+        mainPanel.setBackground(MyColor.PRIMARY_COLOR);
 
         mainPanel.add(emailLabel);
         mainPanel.add(emailTextField);
@@ -62,43 +63,44 @@ public class SignUpClass extends JFrame {
         mainPanel.add(signInButton);
         add(mainPanel);
 
-//        NoteClass noteClass = new NoteClass();
-//        add(noteClass);
-
         requestFocus();
         pack();
 
-        //RETROFIT
-        final String baseUrl = "https://www.googleapis.com/identitytoolkit/v3/";
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        jsonPlaceholderApi = retrofit.create(JsonPlaceholderApi.class);
-
-        String payload = "{email:\"" + emailTextField.getText() + "\",password:\"" + passwordTextField.getText() + "\",returnSecureToken:true}";
-
-        JsonObject jsonObject = new JsonParser().parse(payload).getAsJsonObject();
-        //
-
+        setupRetrofit();
 
         signUpButton.addActionListener(e -> {
+            String payload = "{email:\"" + emailTextField.getText() + "\",password:\"" + passwordTextField.getText() + "\",returnSecureToken:true}";
+
+            JsonObject jsonObject = new JsonParser().parse(payload).getAsJsonObject();
+
             Call<JsonObject> callSignUp = jsonPlaceholderApi.signUp(jsonObject);
             callSignUp.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                     if (!response.isSuccessful()) {
-                        System.out.println(response.errorBody());
+                        if (response.errorBody() != null) {
+                            try {
+                                System.out.println(response.errorBody().string());
+                            } catch (IOException ioException) {
+                                ioException.printStackTrace();
+                            }
+                        }
                     } else {
                         JsonObject object = new Gson().fromJson(response.body(), JsonObject.class);
 
                         System.out.println("Hesap Oluşturuldu");
 
-                        object.get("email").getAsString();
-                        object.get("idToken").getAsString();
-                        object.get("localId").getAsString();
+                        User.setEmail(object.get("email").getAsString());
+                        User.setIdToken(object.get("idToken").getAsString());
+                        User.setUserUID(object.get("localId").getAsString());
+
+                        mainPanel.removeAll();
+                        mainPanel.repaint();
+                        mainPanel.revalidate();
+
+                        mainPanel.add(new NoteClass());
+                        mainPanel.repaint();
+                        mainPanel.revalidate();
                     }
                 }
 
@@ -110,18 +112,39 @@ public class SignUpClass extends JFrame {
         });
 
         signInButton.addActionListener(e -> {
+            String payload = "{email:\"" + emailTextField.getText() + "\",password:\"" + passwordTextField.getText() + "\",returnSecureToken:true}";
+
+            JsonObject jsonObject = new JsonParser().parse(payload).getAsJsonObject();
+
             Call<JsonObject> callSignIn = jsonPlaceholderApi.signIn(jsonObject);
             callSignIn.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                     if (!response.isSuccessful()) {
-                        System.out.println(response.errorBody());
+                        if (response.errorBody() != null) {
+                            try {
+                                System.out.println(response.errorBody().string());
+                            } catch (IOException ioException) {
+                                ioException.printStackTrace();
+                            }
+                        }
                     } else {
                         JsonObject object = new Gson().fromJson(response.body(), JsonObject.class);
 
                         System.out.println("Giriş Yapıldı");
-
                         System.out.println(object.get("idToken").getAsString());
+
+                        User.setEmail(object.get("email").getAsString());
+                        User.setIdToken(object.get("idToken").getAsString());
+                        User.setUserUID(object.get("localId").getAsString());
+
+                        mainPanel.removeAll();
+                        mainPanel.repaint();
+                        mainPanel.revalidate();
+
+                        mainPanel.add(new NoteClass());
+                        mainPanel.repaint();
+                        mainPanel.revalidate();
                     }
                 }
 
@@ -131,7 +154,6 @@ public class SignUpClass extends JFrame {
                 }
             });
         });
-
     }
 
     public static void main(String[] args) {
@@ -156,5 +178,14 @@ public class SignUpClass extends JFrame {
         });
     }
 
-}
+    private void setupRetrofit(){
+        final String baseUrl = "https://www.googleapis.com/identitytoolkit/v3/";
 
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        jsonPlaceholderApi = retrofit.create(JsonPlaceholderApi.class);
+    }
+}
